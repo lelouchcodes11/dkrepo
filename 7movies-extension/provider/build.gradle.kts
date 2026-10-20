@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.sevenmovies.extension"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.sevenmovies.extension"
         minSdk = 23
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
         // Extensions must be one classes.dex: the desktop host translates
