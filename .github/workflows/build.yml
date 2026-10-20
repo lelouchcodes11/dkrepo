@@ -75,9 +75,10 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin builds:builds || git branch builds
-          git checkout builds
-          git checkout main -- SevenMovies.cs3 CnoTo.cs3 repo.json plugins.json
+          git fetch origin builds
+          git worktree add ../builds-dir origin/builds
+          cp SevenMovies.cs3 CnoTo.cs3 repo.json plugins.json ../builds-dir/
+          cd ../builds-dir
           git add SevenMovies.cs3 CnoTo.cs3 repo.json plugins.json
           git diff --staged --quiet || git commit -m "Automated build [skip ci]"
-          git push origin builds
+          git push origin HEAD:builds
