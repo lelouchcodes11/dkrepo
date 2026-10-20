@@ -1,0 +1,8 @@
+{
+  "name": "DK Repo",
+  "description": "DK CloudStream Extension Repository - Movies, TV Shows, and high-quality streaming providers.",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/lelouchcodes11/dkrepo/builds/plugins.json"
+  ]
+}

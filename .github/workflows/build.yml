@@ -1,0 +1,64 @@
+name: Build and Publish CloudStream Extensions
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build 7Movies Extension
+        run: |
+          cd 7movies-extension
+          chmod +x gradlew
+          ./gradlew :provider:assembleDebug --no-daemon
+          cp provider/build/outputs/apk/debug/provider-debug.apk ../SevenMovies.cs3
+
+      - name: Update plugins.json
+        run: |
+          HASH=$(sha256sum SevenMovies.cs3 | awk '{print $1}')
+          SIZE=$(wc -c < SevenMovies.cs3 | tr -d ' ')
+          echo "Built SevenMovies.cs3: $SIZE bytes, sha256-$HASH"
+          python3 -c "
+          import json
+          with open('plugins.json', 'r') as f:
+              data = json.load(f)
+          for p in data:
+              if p.get('internalName') == 'SevenMovies':
+                  p['fileHash'] = f'sha256-{HASH}'
+                  p['fileSize'] = int('$SIZE')
+          with open('plugins.json', 'w') as f:
+              json.dump(data, f, indent=2)
+          "
+
+      - name: Commit and Push to builds branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B builds
+          git add SevenMovies.cs3 repo.json plugins.json
+          git commit -m "Automated build [skip ci]" || exit 0
+          git push -f origin builds

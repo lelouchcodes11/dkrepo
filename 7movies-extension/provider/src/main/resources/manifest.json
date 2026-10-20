@@ -1,0 +1,7 @@
+{
+  "name": "7Movies",
+  "version": 1,
+  "pluginClassName": "com.sevenmovies.extension.SevenMoviesPlugin",
+  "requiresResources": false,
+  "iconUrl": "https://7movies.ac/apple-touch-icon.png"
+}
