@@ -61,6 +61,13 @@ If you prefer to install without adding the repository index, download the compi
 | Extension | Content Types | Playback Features | Status |
 |---|---|---|---|
 | **7Movies** (`com.sevenmovies.extension`) | 🎬 Movies & 📺 TV Shows | Direct HLS streaming via **Vidrift** (Orion 1080p HEVC, Titan, Lyra, Vexon, Evion) + Multi-audio + Subtitles | 🟢 **Active / Working** |
+| **Cno** (`com.cnoto.extension`) | 🎬 Movies & 📺 TV Shows | Direct 4K / 1080p / 720p HLS streaming (Server 21), multi-language subtitles (.vtt), full seasons/episodes catalog | 🟢 **Active / Working** |
+
+### ✨ Cno (Cno.to) Highlights:
+- **Clean REST API**: Instant search, paginated browse by genres & trending, and rich home shelves.
+- **Direct 4K / HD HLS Streaming**: Native master playlist parsing (4K 2160p, 1080p, 720p, 480p, 360p) with zero ad gates.
+- **Multi-Language Subtitles**: Direct WebVTT subtitles with Closed Captions [CC] from `/api/subs/list/...`.
+- **Complete Seasons & Episodes**: Full episode lists with runtimes, overviews, ratings, and stills.
 
 ### ✨ 7Movies Highlights:
 - **Rich TMDB Catalog**: Complete metadata, posters, backdrops, cast, ratings, and episode lists.

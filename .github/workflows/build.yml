@@ -37,21 +37,36 @@ jobs:
           ./gradlew :provider:assembleDebug --no-daemon
           cp provider/build/outputs/apk/debug/provider-debug.apk ../SevenMovies.cs3
 
+      - name: Build Cno Extension
+        run: |
+          cd cno-extension
+          chmod +x gradlew
+          ./gradlew :provider:assembleDebug --no-daemon
+          cp provider/build/outputs/apk/debug/provider-debug.apk ../CnoTo.cs3
+
       - name: Update plugins.json
         run: |
-          export HASH=$(sha256sum SevenMovies.cs3 | awk '{print $1}')
-          export SIZE=$(wc -c < SevenMovies.cs3 | tr -d ' ')
-          echo "Built SevenMovies.cs3: $SIZE bytes, sha256-$HASH"
+          export HASH_7M=$(sha256sum SevenMovies.cs3 | awk '{print $1}')
+          export SIZE_7M=$(wc -c < SevenMovies.cs3 | tr -d ' ')
+          export HASH_CNO=$(sha256sum CnoTo.cs3 | awk '{print $1}')
+          export SIZE_CNO=$(wc -c < CnoTo.cs3 | tr -d ' ')
+          echo "Built SevenMovies.cs3: $SIZE_7M bytes, sha256-$HASH_7M"
+          echo "Built CnoTo.cs3: $SIZE_CNO bytes, sha256-$HASH_CNO"
           python3 -c "
           import json, os
-          h = os.environ['HASH']
-          s = int(os.environ['SIZE'])
+          h7 = os.environ['HASH_7M']
+          s7 = int(os.environ['SIZE_7M'])
+          hc = os.environ['HASH_CNO']
+          sc = int(os.environ['SIZE_CNO'])
           with open('plugins.json', 'r') as f:
               data = json.load(f)
           for p in data:
               if p.get('internalName') == 'SevenMovies':
-                  p['fileHash'] = f'sha256-{h}'
-                  p['fileSize'] = s
+                  p['fileHash'] = f'sha256-{h7}'
+                  p['fileSize'] = s7
+              elif p.get('internalName') == 'CnoTo':
+                  p['fileHash'] = f'sha256-{hc}'
+                  p['fileSize'] = sc
           with open('plugins.json', 'w') as f:
               json.dump(data, f, indent=2)
           "
@@ -62,7 +77,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin builds:builds || git branch builds
           git checkout builds
-          git checkout main -- SevenMovies.cs3 repo.json plugins.json
-          git add SevenMovies.cs3 repo.json plugins.json
+          git checkout main -- SevenMovies.cs3 CnoTo.cs3 repo.json plugins.json
+          git add SevenMovies.cs3 CnoTo.cs3 repo.json plugins.json
           git diff --staged --quiet || git commit -m "Automated build [skip ci]"
           git push origin builds

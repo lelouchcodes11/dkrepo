@@ -1,0 +1,7 @@
+{
+  "name": "Cno",
+  "version": 1,
+  "pluginClassName": "com.cnoto.extension.CnoPlugin",
+  "requiresResources": false,
+  "iconUrl": "https://cno.to/icons/icon-512.png"
+}

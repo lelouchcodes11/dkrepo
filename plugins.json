@@ -19,5 +19,26 @@
     "fileHash": "sha256-4dc064170b60d71f33dca4e913c84413b5188a7fbd8ed7e45113791becc1771c",
     "status": 1,
     "repositoryUrl": "https://github.com/lelouchcodes11/dkrepo"
+  },
+  {
+    "name": "Cno",
+    "internalName": "CnoTo",
+    "pluginClassName": "com.cnoto.extension.CnoPlugin",
+    "version": 2,
+    "apiVersion": 1,
+    "authors": [
+      "Lelouch"
+    ],
+    "description": "Cno (cno.to) - Watch Movies & TV Shows in 4K/HD with direct HLS streaming (Server 20/21), VidFast embedded players, multi-language subtitles, full seasons/episodes.",
+    "tvTypes": [
+      "Movie",
+      "TvSeries"
+    ],
+    "iconUrl": "https://cno.to/icons/icon-512.png",
+    "url": "https://raw.githubusercontent.com/lelouchcodes11/dkrepo/builds/CnoTo.cs3",
+    "fileSize": 138246,
+    "fileHash": "sha256-e8ab78f93f8335f1415169c9da1e59c3adad92de0e5767ba9fa07ba15f9073a5",
+    "status": 1,
+    "repositoryUrl": "https://github.com/lelouchcodes11/dkrepo"
   }
 ]
