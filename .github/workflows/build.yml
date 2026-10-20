@@ -39,17 +39,19 @@ jobs:
 
       - name: Update plugins.json
         run: |
-          HASH=$(sha256sum SevenMovies.cs3 | awk '{print $1}')
-          SIZE=$(wc -c < SevenMovies.cs3 | tr -d ' ')
+          export HASH=$(sha256sum SevenMovies.cs3 | awk '{print $1}')
+          export SIZE=$(wc -c < SevenMovies.cs3 | tr -d ' ')
           echo "Built SevenMovies.cs3: $SIZE bytes, sha256-$HASH"
           python3 -c "
-          import json
+          import json, os
+          h = os.environ['HASH']
+          s = int(os.environ['SIZE'])
           with open('plugins.json', 'r') as f:
               data = json.load(f)
           for p in data:
               if p.get('internalName') == 'SevenMovies':
-                  p['fileHash'] = f'sha256-{HASH}'
-                  p['fileSize'] = int('$SIZE')
+                  p['fileHash'] = f'sha256-{h}'
+                  p['fileSize'] = s
           with open('plugins.json', 'w') as f:
               json.dump(data, f, indent=2)
           "
