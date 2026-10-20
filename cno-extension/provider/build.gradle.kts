@@ -10,8 +10,8 @@ android {
         applicationId = "com.cnoto.extension"
         minSdk = 23
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         // Extensions must be one classes.dex: the desktop host translates
         // classes.dex and nothing else.
         multiDexEnabled = false

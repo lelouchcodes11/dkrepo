@@ -52,7 +52,7 @@ class CnoTo : MainAPI() {
 
     companion object {
         private const val TAG = "CnoTo"
-        private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+        private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         private const val ENC_DEC_API = "https://enc-dec.app/api"
     }
 
@@ -300,8 +300,8 @@ class CnoTo : MainAPI() {
     private fun parsePlaybackData(data: String): PlaybackTarget? {
         val clean = data.removePrefix(mainUrl).trimStart('/')
 
-        // 1. Pipe format: 1396|1_2 or tv/1396|1_2
-        val matchPipe = Regex("""(?:tv/)?(\d+)\|(\d+)_(\d+)""").find(clean)
+        // 1. Pipe format: 1396|1_2 or tv/1396|1_2 or show/1396|1_2
+        val matchPipe = Regex("""(?:(?:show|tv)/)?(\d+)\|(\d+)_(\d+)""").find(clean)
         if (matchPipe != null) {
             val id = matchPipe.groupValues[1].toLongOrNull() ?: return null
             val s = matchPipe.groupValues[2].toIntOrNull() ?: 1
@@ -309,7 +309,7 @@ class CnoTo : MainAPI() {
             return PlaybackTarget("tv", id, s, e)
         }
 
-        // 2. TV path: tv/1396/1/2 or show/1396/1/2 or watch/show/1396/1/2
+        // 2. TV path with season & episode: show/1396/1/2 or tv/1396/1/2 or watch/show/1396/1/2
         val matchTvPath = Regex("""(?:watch/)?(?:show|tv)/(\d+)/(\d+)/(\d+)""").find(clean)
         if (matchTvPath != null) {
             val id = matchTvPath.groupValues[1].toLongOrNull() ?: return null
@@ -318,20 +318,31 @@ class CnoTo : MainAPI() {
             return PlaybackTarget("tv", id, s, e)
         }
 
-        // 3. Movie path: movie/19995 or watch/19995 or movie/19995-avatar or watch/19995-avatar
-        val matchMovie = Regex("""(?:watch/|movie/)?(\d+)(?:-[a-z0-9\-]+)?""").find(clean)
+        // 3. TV show without episode: show/1396 or tv/1396 or watch/show/1396
+        val matchTvPlain = Regex("""(?:watch/)?(?:show|tv)/(\d+)(?:-[a-z0-9\-]+)?""").find(clean)
+        if (matchTvPlain != null) {
+            val id = matchTvPlain.groupValues[1].toLongOrNull() ?: return null
+            return PlaybackTarget("tv", id, 1, 1)
+        }
+
+        // 4. Movie path: movie/19995 or watch/19995 or watch/movie/19995
+        val matchMovie = Regex("""(?:watch/)?movie/(\d+)(?:-[a-z0-9\-]+)?""").find(clean)
+            ?: Regex("""watch/(\d+)(?:-[a-z0-9\-]+)?""").find(clean)
         if (matchMovie != null) {
             val id = matchMovie.groupValues[1].toLongOrNull() ?: return null
             return PlaybackTarget("movie", id, 1, 1)
         }
 
-        // 4. Pure digits
+        // 5. Pure digits
         if (clean.all { it.isDigit() }) {
             val id = clean.toLongOrNull() ?: return null
             return PlaybackTarget("movie", id, 1, 1)
         }
 
-        return null
+        // 6. Fallback based on keywords
+        val id = Regex("""\d+""").find(clean)?.value?.toLongOrNull() ?: return null
+        val isTv = clean.contains("show") || clean.contains("tv")
+        return PlaybackTarget(if (isTv) "tv" else "movie", id, 1, 1)
     }
 
     override suspend fun loadLinks(
@@ -347,7 +358,7 @@ class CnoTo : MainAPI() {
         }
 
         val isTv = target.type == "tv"
-        Log.d(TAG, "loadLinks: target=$target (isTv=$isTv)")
+        Log.d(TAG, "loadLinks: parsed target=$target (isTv=$isTv) from data=$data")
 
         var foundLinks = false
         val seenStreamUrls = Collections.synchronizedSet(mutableSetOf<String>())
@@ -413,7 +424,7 @@ class CnoTo : MainAPI() {
             null
         }
 
-        Log.d(TAG, "Received ${sources?.size ?: 0} sources from Cno API")
+        Log.d(TAG, "Received ${sources?.size ?: 0} sources from Cno API ($sourcesUrl)")
 
         for (source in sources.orEmpty()) {
             val rawUrl = source.url ?: continue
@@ -474,7 +485,8 @@ class CnoTo : MainAPI() {
                                                 this.quality = heightToQuality(height)
                                                 this.headers = mapOf(
                                                     "Referer" to "$mainUrl/",
-                                                    "Origin" to mainUrl
+                                                    "Origin" to mainUrl,
+                                                    "User-Agent" to USER_AGENT
                                                 )
                                             }
                                         )
@@ -498,7 +510,8 @@ class CnoTo : MainAPI() {
                                     this.quality = Qualities.Unknown.value
                                     this.headers = mapOf(
                                         "Referer" to "$mainUrl/",
-                                        "Origin" to mainUrl
+                                        "Origin" to mainUrl,
+                                        "User-Agent" to USER_AGENT
                                     )
                                 }
                             )
@@ -519,7 +532,8 @@ class CnoTo : MainAPI() {
                                 this.quality = Qualities.Unknown.value
                                 this.headers = mapOf(
                                     "Referer" to "$mainUrl/",
-                                    "Origin" to mainUrl
+                                    "Origin" to mainUrl,
+                                    "User-Agent" to USER_AGENT
                                 )
                             }
                         )
@@ -529,7 +543,7 @@ class CnoTo : MainAPI() {
             } else if (source.kind.equals("embed", ignoreCase = true)) {
                 // If it's a VidFast embed, extract using our direct VidFast decryptor
                 if (rawUrl.contains("vidfast")) {
-                    Log.d(TAG, "Extracting VidFast embed: $rawUrl")
+                    Log.d(TAG, "Extracting VidFast embed from source: $rawUrl")
                     val ok = extractVidFast(rawUrl, subtitleCallback, callback)
                     if (ok) foundLinks = true
                 } else {
@@ -544,17 +558,15 @@ class CnoTo : MainAPI() {
             }
         }
 
-        // 3. Always attempt VidFast directly if TV or no direct HLS links found
-        if (isTv || !foundLinks) {
-            val vfUrl = if (isTv) {
-                "https://vidfast.vc/tv/${target.tmdbId}/${target.season}/${target.episode}"
-            } else {
-                "https://vidfast.vc/movie/${target.tmdbId}"
-            }
-            Log.d(TAG, "Querying VidFast directly: $vfUrl")
-            val vfOk = extractVidFast(vfUrl, subtitleCallback, callback)
-            if (vfOk) foundLinks = true
+        // 3. Always attempt VidFast directly for all movies and episodes (provides multiple reliable fallback servers)
+        val vfUrl = if (isTv) {
+            "https://vidfast.vc/tv/${target.tmdbId}/${target.season}/${target.episode}"
+        } else {
+            "https://vidfast.vc/movie/${target.tmdbId}"
         }
+        Log.d(TAG, "Extracting VidFast direct: $vfUrl")
+        val vfOk = extractVidFast(vfUrl, subtitleCallback, callback)
+        if (vfOk) foundLinks = true
 
         Log.d(TAG, "loadLinks finished. foundLinks=$foundLinks")
         return foundLinks
@@ -680,7 +692,9 @@ class CnoTo : MainAPI() {
                                 this.referer = "https://vidfast.vc/"
                                 this.quality = Qualities.P1080.value
                                 this.headers = mapOf(
-                                    "Referer" to "https://vidfast.vc/"
+                                    "Referer" to "https://vidfast.vc/",
+                                    "Origin" to "https://vidfast.vc",
+                                    "User-Agent" to USER_AGENT
                                 )
                             }
                         )
